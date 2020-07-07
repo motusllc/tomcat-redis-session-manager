@@ -1,13 +1,5 @@
 package com.bluejeans.tomcat.redissessions;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-
 import org.apache.catalina.Lifecycle;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.LifecycleListener;
@@ -19,13 +11,20 @@ import org.apache.catalina.session.ManagerBase;
 import org.apache.catalina.util.LifecycleSupport;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
-
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.JedisSentinelPool;
 import redis.clients.jedis.Protocol;
 import redis.clients.util.Pool;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 public class RedisSessionManager extends ManagerBase implements Lifecycle {
 
@@ -422,10 +421,8 @@ public class RedisSessionManager extends ManagerBase implements Lifecycle {
         RedisSession session = null;
 
         if (null == id) {
-            currentSessionIsPersisted.set(false);
-            currentSession.set(null);
-            currentSessionSerializationMetadata.set(null);
-            currentSessionId.set(null);
+            // Just return null but don't wipe out the current session
+            return null;
         } else if (id.equals(currentSessionId.get())) {
             session = currentSession.get();
         } else {
@@ -437,11 +434,6 @@ public class RedisSessionManager extends ManagerBase implements Lifecycle {
                 currentSessionSerializationMetadata.set(container.metadata);
                 currentSessionIsPersisted.set(true);
                 currentSessionId.set(id);
-            } else {
-                currentSessionIsPersisted.set(false);
-                currentSession.set(null);
-                currentSessionSerializationMetadata.set(null);
-                currentSessionId.set(null);
             }
         }
 
@@ -674,6 +666,7 @@ public class RedisSessionManager extends ManagerBase implements Lifecycle {
                 currentSession.remove();
                 currentSessionId.remove();
                 currentSessionIsPersisted.remove();
+                currentSessionSerializationMetadata.remove();
                 log.trace("Session removed from ThreadLocal :" + redisSession.getIdInternal());
             }
         }
